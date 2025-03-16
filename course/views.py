@@ -11,23 +11,27 @@ from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
+
 class SubjectViewSet(viewsets.ModelViewSet):
     permission_classes = []
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
+
 
 class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = []
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def check_connection(request):
     return JsonResponse({"status": "200", "message": "Backend is connected to frontend"})
 
+
 @api_view(['GET'])
-@permission_classes([AllowAny])  # Đảm bảo rằng tất cả người dùng đều có thể truy cập
+# Đảm bảo rằng tất cả người dùng đều có thể truy cập
 def dashBoardManager(request):
     # Đếm số lượng khóa học có trạng thái 'Active'
     active_course_count = Course.objects.filter(status='Active').count()
@@ -41,12 +45,14 @@ def dashBoardManager(request):
     }
     return JsonResponse(data)
 
+
 @api_view(['GET'])
 def getCourses(request):
     courses = Course.objects.all().prefetch_related('teachers__user')
     courses_info = []
     for course in courses:
-        teachers = [{'id': teacher.user.id, 'name': f'{teacher.user.first_name} {teacher.user.last_name}'} for teacher in course.teachers.all()]
+        teachers = [{'id': teacher.user.id, 'name': f'{teacher.user.first_name} {teacher.user.last_name}'}
+                    for teacher in course.teachers.all()]
         courses_info.append({
             'id': course.id,
             'name': course.name,
