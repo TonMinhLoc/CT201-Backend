@@ -1,15 +1,15 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .models import Course, Subject
-from .serializers import CourseSerializer, SubjectSerializer
+from .models import Course, Subject, RegisterCourse
+from .serializers import CourseSerializer, SubjectSerializer, RegisterCourseSerializer
 from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, action
 from rest_framework.response import Response
-import logging
 from rest_framework import status
-
-logger = logging.getLogger(__name__)
+from user.models import Teacher
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
@@ -22,6 +22,16 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = []
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['teachers__user__id']
+
+
+class RegisterCourseViewSet(viewsets.ModelViewSet):
+    permission_classes = []
+    queryset = RegisterCourse.objects.all()
+    serializer_class = RegisterCourseSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['student__user__id']
 
 
 @api_view(['GET'])
@@ -44,30 +54,3 @@ def dashBoardManager(request):
         'feedback_count': 12
     }
     return JsonResponse(data)
-
-
-@api_view(['GET'])
-def getCourses(request):
-    courses = Course.objects.all().prefetch_related('teachers__user')
-    courses_info = []
-    for course in courses:
-        teachers = [{'id': teacher.user.id, 'name': f'{teacher.user.first_name} {teacher.user.last_name}'}
-                    for teacher in course.teachers.all()]
-        courses_info.append({
-            'id': course.id,
-            'name': course.name,
-            'description': course.description,
-            'tuition_fee': course.tuition_fee,
-            'discount': course.discount,
-            'discount_end_date': course.discount_end_date,
-            'lesson_count': course.lesson_count,
-            'exercise_count': course.exercise_count,
-            'current_student_count': course.current_student_count,
-            'graduation_date': course.graduation_date,
-            'creation_date': course.creation_date,
-            'announcement': course.announcement,
-            'average_rating': course.average_rating,
-            'img': course.img.url,
-            'teachers': teachers
-        })
-    return Response(courses_info)

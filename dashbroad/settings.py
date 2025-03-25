@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from django.utils.translation import gettext_lazy
 import os
 
 from datetime import timedelta
@@ -42,18 +43,47 @@ SIMPLE_JWT = {
     "ALOGRIGTHM": "HS512",
 }
 
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+USE_I18N = True
 # settings.py
 
+# settings.py
+
+
+# Cấu hình thư mục tĩnh (để phục vụ các tệp hình ảnh, CSS, JS...)
+STATIC_URL = '/static/'
+
+LANGUAGE_CODE = 'vi'
+
+LANGUAGES = [
+    ('vi', gettext_lazy('Vietnamese')),
+    ('en', gettext_lazy('English')),
+]
+
+
+# Cấu hình thư mục lưu trữ các tệp media (hình ảnh người dùng upload, ví dụ)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Nếu bạn muốn phục vụ hình ảnh trong thư mục 'img_course', bạn có thể làm như sau:
+STATICFILES_DIRS = [
+    # Đảm bảo rằng bạn đã chỉ định thư mục static
+    os.path.join(BASE_DIR, 'static'),
+]
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ),
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+
 }
 
 REST_AUTH = {
@@ -89,6 +119,9 @@ INSTALLED_APPS = [
     'lesson',
     'question',
     'user',
+
+    'django_filters',
+
 
     'django_extensions',
 ]
