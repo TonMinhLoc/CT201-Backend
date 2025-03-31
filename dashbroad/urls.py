@@ -23,6 +23,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/account/", include("user.urls")),
     path("api/courses/", include("course.urls")),
+    path("api/lesson/", include("lesson.urls")),
+    path("api/question/", include("question.urls")),
+    path("api/competition/", include("competition.urls")),
 ]
 
 if settings.DEBUG:

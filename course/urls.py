@@ -13,5 +13,4 @@ router.register(r'registerCourse', RegisterCourseViewSet, basename='registerCour
 urlpatterns = [
     path('viewset/', include(router.urls)),
     path('dashboard/', views.dashBoardManager, name='dashboard'),
-    path('check-connection/', views.check_connection, name='check-connection'),
 ]

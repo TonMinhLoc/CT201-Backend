@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
+
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = []
     queryset = User.objects.all()
@@ -25,6 +26,7 @@ class TeacherViewSet(viewsets.ModelViewSet):
     serializer_class = TeacherSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['user__id']
+
 
 class ManagerViewSet(viewsets.ModelViewSet):
     permission_classes = []
@@ -41,6 +43,7 @@ class StudentViewSet(viewsets.ModelViewSet):
 
 
 class StudentRegisterView(RegisterView):
+    queryset = Student.objects.all()
     serializer_class = StudentRegisterSerializer
     http_method_names = ['post']
 
@@ -50,37 +53,45 @@ class StudentRegisterView(RegisterView):
             return response
 
         except ValidationError as e:
-            return Response({
-                "error": "Lỗi xác thực",
-                "details": e.detail
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({
-                "error": "Đã xảy ra lỗi không mong muốn",
-                "details": str(e)
+                # "error": ["Đã xảy ra lỗi không mong muốn"],
+                "details": [str(e)]
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ManagerLoginView(LoginView):
     def get_response(self):
-        # Gọi phương thức cha để lấy response mặc định
         response = super().get_response()
 
-        user = self.user  # Lấy người dùng hiện tại từ request
-
-        # Kiểm tra xem người dùng có phải là Manager không
-        # Sử dụng filter().first() thay vì get()
+        user = self.user
         manager = Manager.objects.filter(user=user).first()
         if manager:
-            # Tuần tự hóa thông tin Manager
             manager_serializer = ManagerSerializer(manager)
             response.data['manager'] = manager_serializer.data
             return Response(response.data, status=status.HTTP_200_OK)
         else:
             response.data = {
-                "error": "Unauthorized",
-                "message": "Login failed: You are not a manager."
+                "non_field_errors": ["Tài khoản đăng nhập không phải là quản lý."]
+            }
+            return Response(response.data, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class TeacherLoginView(LoginView):
+    def get_response(self):
+        response = super().get_response()
+
+        user = self.user
+        teacher = Teacher.objects.filter(user=user).first()
+        if teacher:
+            teacher_serializer = ManagerSerializer(teacher)
+            response.data['teacher'] = teacher_serializer.data
+            return Response(response.data, status=status.HTTP_200_OK)
+        else:
+            response.data = {
+                "non_field_errors": ["Tài khoản đăng nhập không phải là giáo viên."]
             }
             return Response(response.data, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -115,4 +126,3 @@ class CustomLoginView(LoginView):
         # Nếu vai trò khớp, trả về thông tin với vai trò thực tế
         response.data['role'] = actual_role
         return Response(response.data, status=status.HTTP_200_OK)
-

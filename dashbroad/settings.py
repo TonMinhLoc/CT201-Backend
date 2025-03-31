@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-from django.utils.translation import gettext_lazy
 import os
 
 from datetime import timedelta
@@ -43,10 +42,8 @@ SIMPLE_JWT = {
     "ALOGRIGTHM": "HS512",
 }
 
-LOCALE_PATHS = [
-    os.path.join(BASE_DIR, 'locale'),
-]
 USE_I18N = True
+USE_L10N = True
 # settings.py
 
 # settings.py
@@ -56,11 +53,6 @@ USE_I18N = True
 STATIC_URL = '/static/'
 
 LANGUAGE_CODE = 'vi'
-
-LANGUAGES = [
-    ('vi', gettext_lazy('Vietnamese')),
-    ('en', gettext_lazy('English')),
-]
 
 
 # Cấu hình thư mục lưu trữ các tệp media (hình ảnh người dùng upload, ví dụ)
@@ -115,7 +107,6 @@ INSTALLED_APPS = [
 
     'competition',
     'course',
-    'exercise',
     'lesson',
     'question',
     'user',
@@ -202,11 +193,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 
-USE_I18N = True
 
 USE_TZ = True
 

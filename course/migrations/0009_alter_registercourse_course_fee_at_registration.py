@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             field=models.DecimalField(
                 decimal_places=2,
                 max_digits=15,
-                validators=[course.models.CustomMinValueValidator(0.0)],
+                validators=[course.models.MinValueValidator(0.0)],
             ),
         ),
     ]

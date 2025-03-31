@@ -3,9 +3,10 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Student, Teacher, Manager
 import os
-
+from datetime import date
 
 media = os.getenv('MEDIA')
+
 
 class UserSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
@@ -24,8 +25,9 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ('id', 'user', 'date_of_birth', 'phone_number',
-                  'address', 'profile_picture', 'grade', 'sex')
-        
+                  'address', 'profile_picture', 'grade', 'sex', 'current_amount')
+
+
 class TeacherSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     user = UserSerializer(read_only=True)
@@ -34,7 +36,7 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = ('id', 'user', 'date_of_birth', 'phone_number', 'address', 'profile_picture',
                   'sex', 'years_of_experience', 'work_place',
-                  'academic_degree', 'specialty')
+                  'academic_degree', 'specialty', 'info', 'description')
 
 
 class ManagerSerializer(serializers.ModelSerializer):
@@ -57,18 +59,34 @@ class StudentRegisterSerializer(RegisterSerializer):
     grade = serializers.IntegerField(required=True, allow_null=False)
 
     def save(self, request):
+        # Validate grade
+        grade = self.validated_data.get('grade', 0)
+        if grade < 1 or grade > 12:
+            raise serializers.ValidationError({
+                'non_field_errors': ['Học lớp phải lớn hơn hoặc bằng 1 và nhỏ hơn bằng 12']
+            })
+
+        # Validate date_of_birth
+        date_of_birth = self.validated_data.get('date_of_birth')
+        if date_of_birth >= date.today():
+            raise serializers.ValidationError({
+                'non_field_errors': ['Ngày sinh không thể nhỏ hơn ngày hiện tại']
+            })
+
         user = super().save(request)
         user.first_name = self.validated_data.get('first_name', '')
         user.last_name = self.validated_data.get('last_name', '')
         user.save()
 
-        student, created = Student.objects.get_or_create(user=user)
+        student_data = {
+            'date_of_birth': date_of_birth,
+            'address': self.validated_data.get('address'),
+            'phone_number': self.validated_data.get('phone_number'),
+            'profile_picture': self.validated_data.get('profile_picture'),
+            'grade': grade,
+        }
 
-        student.date_of_birth = self.validated_data.get('date_of_birth')
-        student.address = self.validated_data.get('address')
-        student.phone_number = self.validated_data.get('phone_number')
-        student.profile_picture = self.validated_data.get('profile_picture')
-        student.grade = self.validated_data.get('grade', 0)
+        student, created = Student.objects.update_or_create(user=user, defaults=student_data)
 
         student.save()
 

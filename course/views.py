@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Course, Subject, RegisterCourse
-from .serializers import CourseSerializer, SubjectSerializer, RegisterCourseSerializer
+from .serializers import CourseSerializer, SubjectSerializer, RegisterCourseSerializer, RegisterCourseFilter
 from rest_framework.permissions import AllowAny
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, action
@@ -10,6 +10,7 @@ from rest_framework import status
 from user.models import Teacher
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db import models
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
@@ -23,7 +24,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['teachers__user__id']
+    filterset_fields = ['teachers__user__id', 'status', 'subject__id']
 
 
 class RegisterCourseViewSet(viewsets.ModelViewSet):
@@ -31,13 +32,30 @@ class RegisterCourseViewSet(viewsets.ModelViewSet):
     queryset = RegisterCourse.objects.all()
     serializer_class = RegisterCourseSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['student__user__id']
+    #filterset_fields = ['student__user__id', 'registraition_date', 'status']
+    filterset_class = RegisterCourseFilter
 
+    @action(detail=True, methods=['post'])
+    def refund(self, request, pk=None):
+        register_course = self.get_object()
+        student = register_course.student
+        student.current_amount += register_course.course_fee_at_registration
+        student.save()
+        register_course.delete()
+        return Response({'status': 'success', 'message': 'Hoàn tiền và xóa phiếu đăng ký thành công.'}, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def check_connection(request):
-    return JsonResponse({"status": "200", "message": "Backend is connected to frontend"})
+    @action(detail=False, methods=['get'])
+    def total_fee_by_date_range(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        register_courses = self.filter_queryset(self.get_queryset()).filter(
+            registraition_date__gte=start_date,
+            registraition_date__lte=end_date
+        )
+        total_free = register_courses.aggregate(
+            models.Sum('course_fee_at_registration'))
+        return Response(total_free)
 
 
 @api_view(['GET'])

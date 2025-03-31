@@ -16,6 +16,7 @@ class Student(models.Model):
     address = models.CharField(max_length=255, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='profile_pics/',null=False, blank=False)
     grade = models.IntegerField(default=1)
+    current_amount = models.IntegerField(default=0, editable=False)
 
 class Teacher(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -29,6 +30,8 @@ class Teacher(models.Model):
     work_place = models.CharField(max_length=255,null=False, blank=False)
     academic_degree = models.CharField(max_length=100, null=False, blank=False)
     specialty = models.CharField(max_length=255, null=False, blank=False)
+    info = models.JSONField(verbose_name="Danh sách mô tả chính", blank=True, null=True)
+    description = models.TextField(max_length=255)
 
 class Manager(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)

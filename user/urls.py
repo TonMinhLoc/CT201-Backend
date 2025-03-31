@@ -16,6 +16,7 @@ urlpatterns = [
     path('viewset/', include(router.urls)),
     path('register/', views.StudentRegisterView.as_view(), name='custom_register'),
     path('manager_login/', views.ManagerLoginView.as_view(), name='manager_login'),
+    path('teacher_login/', views.TeacherLoginView.as_view(), name='teacher_login'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='rest_logout'),
     path('token/refresh/', get_refresh_view().as_view(), name='token_refresh'),
